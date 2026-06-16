@@ -32,7 +32,7 @@ connectDB();
 connectCloudinary();
 
 app.use(cors({
-    origin: "*",
+    origin: "https://hotel-booking-system-ahbj-k5httu8ea.vercel.app/",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));

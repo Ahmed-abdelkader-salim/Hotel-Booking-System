@@ -32,12 +32,11 @@ connectDB();
 connectCloudinary();
 
 app.use(cors({
-    origin: [
-        'https://hotel-booking-system-95zm.vercel.app',
-        'http://localhost:5173' // keep for local dev
-    ],
-    credentials: true
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(clerkMiddleware());
 app.use(express.json());
 

@@ -31,7 +31,13 @@ app.get('/api/test', (req, res) => {
 connectDB();
 connectCloudinary();
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://hotel-booking-system-95zm.vercel.app',
+        'http://localhost:5173' // keep for local dev
+    ],
+    credentials: true
+}));
 app.use(clerkMiddleware());
 app.use(express.json());
 

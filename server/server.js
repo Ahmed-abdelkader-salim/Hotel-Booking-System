@@ -15,6 +15,19 @@ import bookingRoutes from "./routes/bookingRoutes.js";
 
 const app = express();
 
+
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        success: true, 
+        env: {
+            hasMongoUri: !!process.env.MONGO_URI,
+            hasClerkKey: !!process.env.CLERK_SECRET_KEY,
+            hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+            nodeEnv: process.env.NODE_ENV
+        }
+    });
+});
+
 connectDB();
 connectCloudinary();
 

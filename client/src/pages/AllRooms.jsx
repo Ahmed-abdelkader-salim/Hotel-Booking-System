@@ -9,7 +9,7 @@ const SORT_OPTIONS = ['Price: Low to High', 'Price: High to Low', 'Newest First'
 const PRICE_RANGES = ['0 - 500', '500 - 1000', '1000 - 2000', '2000+']
 const ROOM_TYPES = ['Single Bed', 'Double Bed', 'Suite']
 
-const Allrooms = () => {
+const AllRooms = () => {
   const {rooms, loading} = useRooms();
 
   const [searchParams] = useSearchParams();
@@ -160,4 +160,4 @@ const Allrooms = () => {
   )
 }
 
-export default Allrooms
+export default AllRooms

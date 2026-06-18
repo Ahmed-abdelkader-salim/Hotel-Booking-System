@@ -3,8 +3,9 @@ import User from "../models/User.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import { sendBookingConfirmation } from "../utils/sendEmail.js";
+import stripe from 'stripe'
 
-
+// ── helper ──────────────────────────────────────────────
 // function to Check Availability of room
 const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
     try {
@@ -21,7 +22,7 @@ const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
 }
 
 
-
+// ── check availability ──────────────────────────────────
 // check availability api 
 export const checkAvailabilityApi = async (req, res) => {
     try {
@@ -33,7 +34,7 @@ export const checkAvailabilityApi = async (req, res) => {
     }
 }
 
-
+// ── create booking ───────────────────────────────────────
 // api to create a new booking
 export const createBooking = async (req, res) => {
     try {
@@ -99,9 +100,8 @@ export const createBooking = async (req, res) => {
 
 
 
-
+// ── get user bookings ────────────────────────────────────
 // get all bookings of a user
-
 export const getUserBookings = async (req, res) => {
     try {
         const user = req.user._id;
@@ -113,7 +113,7 @@ export const getUserBookings = async (req, res) => {
     }
 }
 
-
+// ── get hotel bookings (dashboard) ──────────────────────
 export const getHotelBookings = async (req, res) => {
 
     try{
@@ -136,3 +136,82 @@ export const getHotelBookings = async (req, res) => {
         res.json({success:false, message:error.message});
     }
 }
+
+
+
+
+// ── stripe payment ───────────────────────────────────────
+// stripe payment
+export const stripePayment = async(req, res) => {
+    try {
+        const {bookingId} = req.body;
+        const booking = await Booking.findById(bookingId)
+        .populate("room")
+        .populate("hotel");
+    
+
+        if(!booking){
+            return res.json({success:false, message:"booking not found"})
+        }
+        
+        if(booking.isPaid){
+            return res.json({success:false, message:"Booking already  paid"})
+        }
+
+        if(booking.paymentPending){
+            return res.json({success:false, message:"Payment already in Progress"})
+        }
+
+            await Booking.findByIdAndUpdate(bookingId, { paymentPending: true });
+
+
+        const totalPrice = booking.totalPrice;
+
+        const {origin} = req.headers
+        const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
+        const session = await stripeInstance.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: `${booking.room.roomType} - ${booking.hotel.name}`,
+                            description: `Check-in: ${new Date(booking.checkInDate).toDateString()} → Check-out: ${new Date(booking.checkOutDate).toDateString()} | Guests: ${booking.guests}`,
+                        },
+                        unit_amount: Math.round(booking.totalPrice * 100), // ✅ Stripe بالسنتات
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: "payment",
+            success_url: `${process.env.CLIENT_URL}/payment-success?payment=success&bookingId=${bookingId}`,
+            cancel_url: `${process.env.CLIENT_URL}/my-bookings?payment=cancel&bookingId=${bookingId}`,
+            metadata: { bookingId },
+        });
+
+        res.json({ success: true, session_url: session.url });
+
+    } catch (error) {
+    
+        await Booking.findByIdAndUpdate(req.body.bookingId, { paymentPending: false });
+        res.json({ success: false, message: error.message });
+    }
+        
+}
+
+
+
+// verify booking payment status
+export const verifyPayment = async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+        res.json({ success: true, isPaid: booking.isPaid });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};

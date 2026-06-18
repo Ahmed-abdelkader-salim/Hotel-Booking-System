@@ -19,7 +19,8 @@ const bookingSchema = new mongoose.Schema({
         required:true,
         default:"Pay At Hotel",
     },
-    isPaid:{type:Boolean, default:false}
+    isPaid:{type:Boolean, default:false},
+    paymentPending: { type: Boolean, default: false } // protect  double request
 }, {timestamps:true});
 
 

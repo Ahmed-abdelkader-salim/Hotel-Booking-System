@@ -29,7 +29,7 @@ const useBookings = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    return {bookings, loading, currency}
+    return {bookings, loading, currency, fetchBookings}
 }
 
 

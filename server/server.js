@@ -12,6 +12,7 @@ import hotelRoutes from "./routes/hotelRoutes.js";
 import connectCloudinary from "./config/cloudinary.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
+import { stripeWebhook } from "./controllers/stripeWebhooks.js";
 
 const app = express();
 
@@ -31,11 +32,10 @@ app.get('/api/test', (req, res) => {
 connectDB();
 connectCloudinary();
 
-app.use(cors({
-    origin: "https://hotel-booking-system-xa9x-pw7yotj21.vercel.app/",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors());
+
+app.post('/api/stripe', express.raw({type:"application/json"}), stripeWebhook)
+
 
 app.use(clerkMiddleware());
 app.use(express.json());
@@ -68,11 +68,12 @@ process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err.message);
     console.error(err.stack);
 });
+const PORT = process.env.PORT
 
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
 }
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
 export default app;

@@ -1,7 +1,8 @@
 import stripe from 'stripe'
+import Booking from '../models/Booking.js'
 export const stripeWebhook = async (req, res) => {
-    const sig = req.headers["stripe-signature"];
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    const sig = req.headers["stripe-signature"];
 
     let event;
     try {
@@ -17,22 +18,21 @@ export const stripeWebhook = async (req, res) => {
     switch (event.type) {
 
         // ✅ الدفع نجح
-        case "payment_intent.succeeded":
-            const paymentIntent = event.data.object;
-            const sessionSucceeded = await stripeInstance.checkout.sessions.list({
-                payment_intent: paymentIntent.id,
-            });
-            const bookingIdSuccess = sessionSucceeded.data[0]?.metadata?.bookingId;
-            if (bookingIdSuccess) {
-                await Booking.findByIdAndUpdate(bookingIdSuccess, {
-                    isPaid: true,
-                    paymentPending: false,
-                    paymentMethod: "Stripe",
-                    status: "confirmed",
-                });
-            }
-            break;
+    case "payment_intent.succeeded": {
+    const paymentIntent = event.data.object;
 
+    const bookingId = paymentIntent.metadata?.bookingId;
+
+    if (bookingId) {
+        await Booking.findByIdAndUpdate(bookingId, {
+            isPaid: true,
+            paymentPending: false,
+            paymentMethod: "Stripe",
+            status: "confirmed",
+        });
+    }
+    break;
+}
         // ✅ الدفع اتكنسل أو فشل
         case "payment_intent.canceled":
             const paymentIntentCancelled = event.data.object;

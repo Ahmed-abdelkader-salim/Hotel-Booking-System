@@ -34,10 +34,15 @@ connectCloudinary();
 
 app.use(cors());
 
-app.post('/api/stripe', express.raw({type:"application/json"}), stripeWebhook)
 
 
 app.use(clerkMiddleware());
+app.post(
+  '/api/stripe',
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
+
 app.use(express.json());
 
 // Routes

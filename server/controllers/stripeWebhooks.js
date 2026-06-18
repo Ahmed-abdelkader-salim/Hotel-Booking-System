@@ -1,6 +1,7 @@
+import stripe from 'stripe'
 export const stripeWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
-    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
     let event;
     try {
